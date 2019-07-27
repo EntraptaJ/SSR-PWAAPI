@@ -1,5 +1,5 @@
 // UI/UI/Components/Router/findRoute.ts
-import { AppRoute } from 'UI/Components/Router/types'
+import { AppRoute } from 'UI/Components/Router/types';
 
 /**
  * Recursively searches for a App Route

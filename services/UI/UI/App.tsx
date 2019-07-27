@@ -3,6 +3,7 @@ import React, { useContext, PropsWithChildren, ReactElement } from 'react';
 import { PropContext } from './Components/Providers/PropProvider';
 import Loadable from 'react-loadable';
 import { LoadingProgress } from './Components/Layout/LoadingProgress';
+import { AppRouter } from './Components/Router';
 
 const CookieProvider = Loadable<
   PropsWithChildren<{ cookies: import('universal-cookie').Cookie }>,
@@ -23,7 +24,7 @@ const CssBaseline = Loadable({
 const AppBar = Loadable({
   loader: () => import('UI/Components/Layout/AppBar'),
   modules: ['Components/Layout/AppBar/index.tsx'],
-  loading: LoadingProgress,
+  loading: LoadingProgress
 });
 
 const SessionProvider = Loadable({
@@ -63,7 +64,7 @@ function App({ client }: AppProps): React.ReactElement {
             <AppBar />
             <div className='main-content' style={{ display: 'flex', flex: '1 1', position: 'relative' }}>
               <NavDrawer />
-              <p>Hello World</p>
+              <AppRouter />
             </div>
           </SessionProvider>
         </ApolloProvider>

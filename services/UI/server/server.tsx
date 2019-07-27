@@ -1,7 +1,7 @@
 // UI/server/server.tsx
 import { getDataFromTree } from '@apollo/react-hooks';
 import { ServerStyleSheets, ThemeProvider } from '@material-ui/styles';
-import { isRedirect, ServerLocation } from '@reach/router';
+import { StaticRouter, StaticRouterContext } from 'react-router';
 import { NormalizedCacheObject } from 'apollo-cache-inmemory';
 import { readJSON } from 'fs-extra';
 import 'isomorphic-unfetch';
@@ -53,6 +53,7 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
 
   const client = initApollo({ baseUrl: config.baseUrl, token: ctx.cookies.get('token') });
   const sheets = new ServerStyleSheets();
+  const context: StaticRouterContext = {};
 
   const coreApp = (
     <ConfigProvider {...config}>
@@ -63,7 +64,7 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
   try {
     // Pre-render Once
     renderToString(
-      <ServerLocation url={ctx.url}>
+      <StaticRouter location={ctx.url} context={context}>
         <ThemeProvider theme={theme}>
           <Capture report={moduleName => modules.push(moduleName)}>
             <PropProvider ctx={ctx} sessionProps={sessionProps} props={{}}>
@@ -71,28 +72,45 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
             </PropProvider>
           </Capture>
         </ThemeProvider>
-      </ServerLocation>
+      </StaticRouter>
     );
+
+    if (context.url) {
+      ctx.res.writeHead(302, {
+        Location: context.url
+      });
+      ctx.end();
+      return;
+    }
 
     // Re-render extracting Apollo Data and Modules
     await getDataFromTree(
       sheets.collect(
-        <ServerLocation url={ctx.url}>
+        <StaticRouter location={ctx.url} context={context}>
           <ThemeProvider theme={theme}>
             <PropProvider ctx={ctx} sessionProps={sessionProps} props={{}}>
               {coreApp}
             </PropProvider>
           </ThemeProvider>
-        </ServerLocation>
+        </StaticRouter>
       )
     );
+    if (context.url) {
+      ctx.res.writeHead(302, {
+        Location: context.url
+      });
+      ctx.end();
+      return;
+    }
 
     localProps = (await Props) || {};
     sessionProps = [{ path: ctx.path, props: (await Props) || {} }];
   } catch (e) {
-    if (isRedirect(e)) {
-      ctx.redirect(e.uri);
-      ctx.res.end();
+    if (context.url) {
+      ctx.res.writeHead(302, {
+        Location: context.url
+      });
+      ctx.end();
       return;
     }
     localProps = (await Props) || {};
@@ -106,13 +124,13 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
   );
 
   const MainApp = (
-    <ServerLocation url={ctx.url}>
+    <StaticRouter location={ctx.url} context={context}>
       <ThemeProvider theme={theme}>
         <PropProvider ctx={ctx} sessionProps={sessionProps} props={localProps}>
           {coreApp}
         </PropProvider>
       </ThemeProvider>
-    </ServerLocation>
+    </StaticRouter>
   );
   const portals = new ServerPortal();
   const element = portals.collectPortals(MainApp);
@@ -123,7 +141,7 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-  }`
+  }`;
 
   const Head = renderToString(
     <head>
@@ -159,8 +177,9 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
             <>
               {sources
                 .filter(({ type }) => type === 'script')
+                .reverse()
                 .map(({ src }, index) => (
-                  <script type='text/javascript' charSet='utf8' key={index} src={src} />
+                  <script async type='text/javascript' key={index} src={src} />
                 ))}
             </>
           )}

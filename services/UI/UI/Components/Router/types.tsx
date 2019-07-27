@@ -1,5 +1,6 @@
 // UI/UI/Components/Router/types.tsx
-
+import { LoadableType } from './Loadable'
+import { RouteComponentProps } from '@reach/router';
 export interface AppRoute {
   /**
    * Route Path for Router Route Component
@@ -12,6 +13,11 @@ export interface AppRoute {
   to: string;
 
   /**
+   * Public label for route
+   */
+  label: string;
+
+  /**
    * Auth Mode
    * True means user must be logged in and will be redirected to login if logged out
    * False means user must be logged out and will be redirected to `/` if logged in
@@ -20,4 +26,6 @@ export interface AppRoute {
   authMode?: boolean;
 
   children?: AppRoute[];
+
+  Loadable?: LoadableType<RouteComponentProps>;
 }

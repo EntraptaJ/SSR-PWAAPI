@@ -1,5 +1,6 @@
 // UI/UI/client.tsx
 import React, { FunctionComponent, useEffect } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { hydrate } from 'react-dom';
 import { preloadReady } from 'react-loadable';
 import { PropProvider } from 'UI/Components/Providers/PropProvider';
@@ -25,18 +26,20 @@ const Main: FunctionComponent = () => {
   }, []);
 
   return (
-    <ThemeProvider theme={theme}>
-      <ConfigProvider {...window.APP_STATE.CONFIG}>
-        <PropProvider sessionProps={[]} props={window.APP_STATE.PROPS}>
-          <App />
-        </PropProvider>
-      </ConfigProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <ConfigProvider {...window.APP_STATE.CONFIG}>
+          <PropProvider sessionProps={[]} props={window.APP_STATE.PROPS}>
+            <App />
+          </PropProvider>
+        </ConfigProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 };
 
 const render = async (renderFunction: import('react-dom').Renderer): Promise<void> => {
-  await prepareClientPortals()
+  await prepareClientPortals();
   renderFunction(<Main />, document.getElementById('app'));
 };
 

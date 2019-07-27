@@ -6,6 +6,9 @@ import Slide from '@material-ui/core/Slide';
 import { UniversalPortal } from '@jesstelford/react-portal-universal';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
+import { Link, LinkProps } from 'react-router-dom';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
 
 function NavPaper(): React.ReactElement {
   return (
@@ -14,6 +17,8 @@ function NavPaper(): React.ReactElement {
     </Paper>
   );
 }
+
+const AdapterLink = React.forwardRef<HTMLAnchorElement, LinkProps>((props, ref) => <Link innerRef={ref as any} {...props} />);
 
 export default function NavDrawer(): React.ReactElement {
   const [open, setOpen] = useState<boolean>(false);
@@ -28,7 +33,16 @@ export default function NavDrawer(): React.ReactElement {
         </IconButton>
       </UniversalPortal>
       <Slide direction='right' in={open} mountOnEnter unmountOnExit>
-        <NavPaper />
+        <Paper elevation={4} style={{ width: '240px' }}>
+          <List>
+            <ListItem button component={AdapterLink} to='/'>
+              Home
+            </ListItem>
+            <ListItem button component={AdapterLink} to='/TestRoute'>
+              Test Route
+            </ListItem>
+          </List>
+        </Paper>
       </Slide>
     </>
   );
