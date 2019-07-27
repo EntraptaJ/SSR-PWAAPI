@@ -1,24 +1,12 @@
 // UI/UI/Components/Layout/NavBar/index.tsx
 import React, { useState } from 'react';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Slide from '@material-ui/core/Slide';
 import { UniversalPortal } from '@jesstelford/react-portal-universal';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
-import { Link, LinkProps } from 'react-router-dom';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-
-function NavPaper(): React.ReactElement {
-  return (
-    <Paper elevation={4} style={{ width: '240px' }}>
-      <Typography variant='body1'>Hello</Typography>
-    </Paper>
-  );
-}
-
-const AdapterLink = React.forwardRef<HTMLAnchorElement, LinkProps>((props, ref) => <Link innerRef={ref as any} {...props} />);
+import { LinkListItem } from 'UI/Components/Style/Lists/ListItem/LinkListItem';
+import { BaseList } from 'UI/Components/Style/Lists/BaseList';
 
 export default function NavDrawer(): React.ReactElement {
   const [open, setOpen] = useState<boolean>(false);
@@ -34,14 +22,10 @@ export default function NavDrawer(): React.ReactElement {
       </UniversalPortal>
       <Slide direction='right' in={open} mountOnEnter unmountOnExit>
         <Paper elevation={4} style={{ width: '240px' }}>
-          <List>
-            <ListItem button component={AdapterLink} to='/'>
-              Home
-            </ListItem>
-            <ListItem button component={AdapterLink} to='/TestRoute'>
-              Test Route
-            </ListItem>
-          </List>
+          <BaseList>
+            <LinkListItem to='/' label='Home' />
+            <LinkListItem to='/TestRoute' label='Test Route' />
+          </BaseList>
         </Paper>
       </Slide>
     </>
