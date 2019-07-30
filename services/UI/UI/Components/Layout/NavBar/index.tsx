@@ -1,33 +1,45 @@
 // UI/UI/Components/Layout/NavBar/index.tsx
-import React, { useState } from 'react';
-import Paper from '@material-ui/core/Paper';
-import Slide from '@material-ui/core/Slide';
-import { UniversalPortal } from '@jesstelford/react-portal-universal';
+import Portalize from 'react-portalize';
 import IconButton from '@material-ui/core/IconButton';
+import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import MenuIcon from '@material-ui/icons/Menu';
-import { LinkListItem } from 'UI/Components/Style/Lists/ListItem/LinkListItem';
-import { BaseList } from 'UI/Components/Style/Lists/BaseList';
+import React, { useEffect, useState, useMemo } from 'react';
+import useReactRouter from 'use-react-router';
+import { useStyles } from '../Styles';
+import { RouteList } from 'UI/Components/Router/generateList';
+import { AppRoutes } from 'UI/Components/Router/AppRoutes';
 
 export default function NavDrawer(): React.ReactElement {
-  const [open, setOpen] = useState<boolean>(false);
-  // TODO: Implement ISMobile
-  // const isMobileState = typeof window === 'undefined' ? true : window.matchMedia('(max-width: 640px)').matches;
+  const [navOpen, setNavOpen] = useState<boolean>(false);
+  const classes = useStyles();
+  const { location } = useReactRouter();
 
-  return (
-    <>
-      <UniversalPortal selector='#navActions'>
-        <IconButton onClick={() => setOpen(!open)}>
-          <MenuIcon />
-        </IconButton>
-      </UniversalPortal>
-      <Slide direction='right' in={open} mountOnEnter unmountOnExit>
-        <Paper elevation={4} style={{ width: '240px' }}>
-          <BaseList>
-            <LinkListItem to='/' label='Home' />
-            <LinkListItem to='/TestRoute' label='Test Route' />
-          </BaseList>
-        </Paper>
-      </Slide>
-    </>
+  const toggleNav = (): void => setNavOpen(!navOpen);
+
+  useEffect(() => setNavOpen(false), [location]);
+
+  return useMemo(
+    () => (
+      <>
+        <Portalize container='#navActions'>
+          <IconButton className={classes.menuButton} onClick={() => setNavOpen(!navOpen)}>
+            <MenuIcon />
+          </IconButton>
+        </Portalize>
+        <SwipeableDrawer
+          open={navOpen}
+          onOpen={toggleNav}
+          className={classes.drawer}
+          onClose={() => setNavOpen(!navOpen)}
+          classes={{
+            paper: classes.drawerPaper
+          }}
+        >
+          <div className={classes.toolbar} />
+          <RouteList routes={AppRoutes} />
+        </SwipeableDrawer>
+      </>
+    ),
+    [navOpen]
   );
 }

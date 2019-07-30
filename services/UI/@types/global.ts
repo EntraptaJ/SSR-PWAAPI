@@ -1,4 +1,4 @@
-import { AppState } from 'server/server';
+import { AppState } from 'server/type';
 
 declare global {
   interface Window {
@@ -7,7 +7,7 @@ declare global {
 
   namespace NodeJS {
     interface Process {
-      browser: boolean
+      browser: boolean;
     }
   }
 }

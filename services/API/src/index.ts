@@ -47,7 +47,7 @@ const startWeb = async (): Promise<Koa> => {
 
 const startAPI = async (): Promise<void> => {
   console.log('Starting API Hello');
-  await mongoose.connect(`mongodb://${process.env['DB_HOST']}:27017/design`, { useNewUrlParser: true, useCreateIndex: true });
+  await mongoose.connect(`mongodb://${process.env['DB_HOST']}:27017/ssrpwa`, { useNewUrlParser: true, useCreateIndex: true });
 
   const [app] = await Promise.all([startWeb()]);
   await app.listen(port);

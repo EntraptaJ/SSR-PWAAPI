@@ -1,19 +1,16 @@
 // UI/UI/App.tsx
-import React, { useContext, PropsWithChildren, ReactElement } from 'react';
-import { PropContext } from './Components/Providers/PropProvider';
+import React from 'react';
 import Loadable from 'react-loadable';
-import { LoadingProgress } from './Components/Layout/LoadingProgress';
-import { AppRouter } from './Components/Router';
+import { useRoute } from './Components/Router/useRoute';
+import useReactRouter from 'use-react-router';
+import { ThemeProvider } from '@material-ui/styles';
+import { theme } from 'UI/Components/Style/Theme';
+import SessionProvider, { useIsAuthed } from './Components/Providers/SessionProvider';
+import { Redirect } from 'react-router-dom';
 
-const CookieProvider = Loadable<
-  PropsWithChildren<{ cookies: import('universal-cookie').Cookie }>,
-  typeof import('react-cookie')
->({
-  loader: () => import('react-cookie'),
-  loading: LoadingProgress,
-  modules: ['react-cookie/es6/index.js'],
-  render: ({ CookiesProvider }, { children, cookies }) => <CookiesProvider cookies={cookies}>{children}</CookiesProvider>
-});
+const LoadingProgress = (): React.ReactElement => {
+  return <></>;
+};
 
 const CssBaseline = Loadable({
   loader: () => import('@material-ui/core/CssBaseline'),
@@ -21,16 +18,10 @@ const CssBaseline = Loadable({
   modules: ['@material-ui/core/esm/CssBaseline/index.js']
 });
 
-const AppBar = Loadable({
-  loader: () => import('UI/Components/Layout/AppBar'),
-  modules: ['Components/Layout/AppBar/index.tsx'],
-  loading: LoadingProgress
-});
-
-const SessionProvider = Loadable({
-  loader: () => import('UI/Components/Providers/SessionProvider'),
+const AppRouter = Loadable({
+  loader: () => import('UI/Components/Router'),
   loading: LoadingProgress,
-  modules: ['Components/Providers/SessionProvider/index.tsx']
+  modules: ['Components/Router/index.tsx']
 });
 
 const NavDrawer = Loadable({
@@ -39,37 +30,46 @@ const NavDrawer = Loadable({
   modules: ['Components/Layout/NavBar/index.tsx']
 });
 
-interface AppProps {
-  client?: import('apollo-client').ApolloClient<import('apollo-cache-inmemory').NormalizedCacheObject>;
-}
-
-const ApolloProvider = Loadable<
-  PropsWithChildren<{ client?: import('apollo-client').ApolloClient<import('apollo-cache-inmemory').NormalizedCacheObject> }>,
-  typeof import('UI/Components/Providers/ApolloProvider')
->({
-  loader: () => import('UI/Components/Providers/ApolloProvider'),
-  modules: ['Components/Providers/ApolloProvider.tsx'],
+const AppBar = Loadable({
+  loader: () => import('UI/Components/Layout/AppBar'),
   loading: LoadingProgress,
-  render: ({ ApolloProvider }, { children, ...props }) => <ApolloProvider {...props}>{children}</ApolloProvider>
+  modules: ['Components/Layout/AppBar/index.tsx']
 });
 
-function App({ client }: AppProps): React.ReactElement {
-  const { ctx } = useContext(PropContext);
+function AppBody(): React.ReactElement {
+  const { location } = useReactRouter();
+  const route = useRoute(location.pathname);
+  const { isAuthed } = useIsAuthed();
+  const isAuthorized = !route || typeof route.authMode === 'undefined' || route.authMode === isAuthed;
   return (
     <>
-      <CookieProvider cookies={typeof ctx !== 'undefined' ? ctx.request.universalCookies : undefined}>
-        <ApolloProvider client={client}>
-          <SessionProvider>
-            <CssBaseline />
-            <AppBar />
-            <div className='main-content' style={{ display: 'flex', flex: '1 1', position: 'relative' }}>
-              <NavDrawer />
-              <AppRouter />
-            </div>
-          </SessionProvider>
-        </ApolloProvider>
-      </CookieProvider>
+      {!route || !route.hideUI ? <AppBar /> : <></>}
+      {!route || !route.hideUI ? <NavDrawer /> : <></>}
+
+      <main
+        style={{
+          display: 'flex',
+          flex: '1 1 auto',
+          position: 'relative',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}
+      >
+        {isAuthorized ? <AppRouter /> : <Redirect to={!isAuthed ? '/Login' : '/'} />}
+      </main>
     </>
+  );
+}
+
+function App(): React.ReactElement {
+  return (
+    <ThemeProvider theme={theme}>
+      <SessionProvider>
+        <CssBaseline />
+
+        <AppBody />
+      </SessionProvider>
+    </ThemeProvider>
   );
 }
 

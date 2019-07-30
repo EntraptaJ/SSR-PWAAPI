@@ -1,31 +1,24 @@
 // UI/server/server.tsx
 import { getDataFromTree } from '@apollo/react-hooks';
-import { ServerStyleSheets, ThemeProvider } from '@material-ui/styles';
-import { StaticRouter, StaticRouterContext } from 'react-router';
-import { NormalizedCacheObject } from 'apollo-cache-inmemory';
+import { renderPortalsToString } from 'react-portalize/server';
+import { ServerStyleSheets } from '@material-ui/styles';
 import { readJSON } from 'fs-extra';
 import 'isomorphic-unfetch';
-import { ServerPortal } from '@jesstelford/react-portal-universal/server';
 import { Context } from 'koa';
+import MultiStream from 'multistream';
+import { renderAppHeadStream } from 'server/Head';
+import { renderScripts } from 'server/Sources';
 import React from 'react';
-import { renderToNodeStream, renderToString } from 'react-dom/server';
+import { CookiesProvider } from 'react-cookie';
+import { renderToString } from 'react-dom/server';
 import { Capture, preloadAll } from 'react-loadable';
+import { StaticRouter, StaticRouterContext } from 'react-router';
 import App from 'UI/App';
+import { ApolloProvider } from 'UI/Components/Providers/ApolloProvider';
 import { Config, ConfigProvider } from 'UI/Components/Providers/ConfigProvider';
 import { PathPropsObject, PropProvider, Props } from 'UI/Components/Providers/PropProvider';
 import { initApollo } from 'UI/Utils/initApollo';
-import { theme } from 'UI/Components/Style/Theme';
-
-interface Source {
-  src: string;
-  type: 'script' | 'style';
-}
-
-export interface AppState {
-  PROPS: any;
-  APOLLO_STATE: NormalizedCacheObject;
-  CONFIG: Config;
-}
+import { AppState, Source } from './type';
 
 export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
   ctx.respond = false;
@@ -57,62 +50,36 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
 
   const coreApp = (
     <ConfigProvider {...config}>
-      <App client={client} />
+      <CookiesProvider cookies={ctx.request.universalCookies}>
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      </CookiesProvider>
     </ConfigProvider>
   );
 
   try {
+    const preRenderedApp = (
+      <PropProvider ctx={ctx} sessionProps={sessionProps} props={{}}>
+        {coreApp}
+      </PropProvider>
+    );
     // Pre-render Once
     renderToString(
       <StaticRouter location={ctx.url} context={context}>
-        <ThemeProvider theme={theme}>
-          <Capture report={moduleName => modules.push(moduleName)}>
-            <PropProvider ctx={ctx} sessionProps={sessionProps} props={{}}>
-              {coreApp}
-            </PropProvider>
-          </Capture>
-        </ThemeProvider>
+        <Capture report={moduleName => modules.push(moduleName)}>{preRenderedApp}</Capture>
       </StaticRouter>
     );
-
-    if (context.url) {
-      ctx.res.writeHead(302, {
-        Location: context.url
-      });
-      ctx.end();
-      return;
-    }
-
     // Re-render extracting Apollo Data and Modules
     await getDataFromTree(
-      sheets.collect(
-        <StaticRouter location={ctx.url} context={context}>
-          <ThemeProvider theme={theme}>
-            <PropProvider ctx={ctx} sessionProps={sessionProps} props={{}}>
-              {coreApp}
-            </PropProvider>
-          </ThemeProvider>
-        </StaticRouter>
-      )
+      <StaticRouter location={ctx.url} context={context}>
+        {preRenderedApp}
+      </StaticRouter>
     );
-    if (context.url) {
-      ctx.res.writeHead(302, {
-        Location: context.url
-      });
-      ctx.end();
-      return;
-    }
 
     localProps = (await Props) || {};
     sessionProps = [{ path: ctx.path, props: (await Props) || {} }];
   } catch (e) {
-    if (context.url) {
-      ctx.res.writeHead(302, {
-        Location: context.url
-      });
-      ctx.end();
-      return;
-    }
     localProps = (await Props) || {};
     sessionProps = [{ path: ctx.path, props: (await Props) || {} }];
   }
@@ -125,41 +92,19 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
 
   const MainApp = (
     <StaticRouter location={ctx.url} context={context}>
-      <ThemeProvider theme={theme}>
-        <PropProvider ctx={ctx} sessionProps={sessionProps} props={localProps}>
-          {coreApp}
-        </PropProvider>
-      </ThemeProvider>
+      <PropProvider ctx={ctx} sessionProps={sessionProps} props={localProps}>
+        {coreApp}
+      </PropProvider>
     </StaticRouter>
   );
-  const portals = new ServerPortal();
-  const element = portals.collectPortals(MainApp);
+  await getDataFromTree(sheets.collect(MainApp));
 
-  const componentStream = renderToNodeStream(element);
+  const headStream = renderAppHeadStream({ sources, sheets });
 
-  const AppCSS = `#app {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }`;
+  const TopStreams = [headStream];
+  const TopStream = MultiStream(TopStreams);
 
-  const Head = renderToString(
-    <head>
-      <meta charSet='UTF-8' />
-      <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0' name='viewport' />
-      {sources && sources.map(({ src, type }, index) => <link rel='preload' href={src} as={type} key={index} />)}
-      {sources &&
-        sources
-          .filter(({ type }) => type === 'style')
-          .map(({ src }, index) => <link rel='stylesheet' type='text/css' href={src} key={index} />)}
-      <style id='jss-server-side' dangerouslySetInnerHTML={{ __html: sheets.toString() + AppCSS }} />
-      <style>{AppCSS}</style>
-    </head>
-  );
-
-  ctx.res.write(`${Head}<div id="app">`);
-
-  componentStream.pipe(
+  TopStream.pipe(
     ctx.res,
     { end: false }
   );
@@ -170,25 +115,15 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
     CONFIG: config
   };
 
-  const htmlEnd = `
-      </div>
-        <script type="text/javascript">window.APP_STATE = ${JSON.stringify(appState)}</script>
-          ${renderToString(
-            <>
-              {sources
-                .filter(({ type }) => type === 'script')
-                .reverse()
-                .map(({ src }, index) => (
-                  <script async type='text/javascript' key={index} src={src} />
-                ))}
-            </>
-          )}
-    </body>
-  </html>`;
+  const htmlEnd = `</div><script type="text/javascript">window.APP_STATE = ${JSON.stringify(appState)}</script>${renderScripts(
+    sources
+  )}`;
 
-  componentStream.on('end', () => {
+  TopStream.on('end', () => {
+    ctx.res.write('<div id="app">');
+    ctx.res.write(`${renderPortalsToString(renderToString(MainApp))}`);
     ctx.res.write(htmlEnd);
 
-    ctx.res.end();
+    ctx.res.end(`</body></html>`);
   });
 };

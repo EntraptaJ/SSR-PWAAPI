@@ -1,14 +1,12 @@
 // UI/UI/client.tsx
 import React, { FunctionComponent, useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { hydrate } from 'react-dom';
+import { hydrate, render as ReactDOMRender } from 'react-dom';
 import { preloadReady } from 'react-loadable';
 import { PropProvider } from 'UI/Components/Providers/PropProvider';
-import App from './App';
 import { ConfigProvider } from 'UI/Components/Providers/ConfigProvider';
-import { ThemeProvider } from '@material-ui/styles';
-import { theme } from 'UI/Components/Style/Theme';
-import { prepareClientPortals } from '@jesstelford/react-portal-universal';
+import { CookiesProvider } from 'react-cookie';
+import { ApolloProvider } from 'UI/Components/Providers/ApolloProvider';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async function() {
@@ -17,7 +15,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-const Main: FunctionComponent = () => {
+const Main: FunctionComponent = ({ children }) => {
   useEffect(() => {
     const jssStyles = document.querySelector('#jss-server-side');
     if (jssStyles && jssStyles.parentNode) {
@@ -27,20 +25,32 @@ const Main: FunctionComponent = () => {
 
   return (
     <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <ConfigProvider {...window.APP_STATE.CONFIG}>
-          <PropProvider sessionProps={[]} props={window.APP_STATE.PROPS}>
-            <App />
-          </PropProvider>
-        </ConfigProvider>
-      </ThemeProvider>
+      <ConfigProvider {...window.APP_STATE.CONFIG}>
+        <PropProvider sessionProps={[]} props={window.APP_STATE.PROPS}>
+          <CookiesProvider>
+            <ApolloProvider>{children}</ApolloProvider>
+          </CookiesProvider>
+        </PropProvider>
+      </ConfigProvider>
     </BrowserRouter>
   );
 };
 
 const render = async (renderFunction: import('react-dom').Renderer): Promise<void> => {
-  await prepareClientPortals();
-  renderFunction(<Main />, document.getElementById('app'));
+  const { default: App } = await import('UI/App');
+  renderFunction(
+    <Main>
+      <App />
+    </Main>,
+    document.getElementById('app')
+  );
 };
 
 preloadReady().then(() => render(hydrate));
+
+const hot = (module as any).hot;
+if (hot && hot.accept) {
+  hot.accept(async () => {
+    render(ReactDOMRender);
+  });
+}

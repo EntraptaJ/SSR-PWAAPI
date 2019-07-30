@@ -11,15 +11,28 @@ const HandleRoutes = (routes: AppRoute[], parent: string = '/'): ReactElement[] 
       if (typeof Route.Loadable !== 'undefined')
         Routes = [
           ...Routes,
-          <RouteComponent exact key={Route.to} path={`${parent}${Route.path}`} component={Route.Loadable} />
+          <RouteComponent
+            key={Route.path}
+            path={`${parent}${Route.path}`}
+            render={() => (
+              <>
+                <RouteComponent key={Route.path} path={`${parent}${Route.path}/`} exact component={Route.Loadable} />
+                {HandleRoutes(Route.children, `${parent}${Route.path}/`)}
+              </>
+            )}
+          />
         ];
-      Routes = [...Routes, ...HandleRoutes(Route.children, `${parent}${Route.path}`)];
     } else if (typeof Route.Loadable !== 'undefined')
-      Routes = [...Routes, <RouteComponent key={Route.to} path={`${parent}${Route.path}`} component={Route.Loadable} />];
+      Routes = [
+        ...Routes,
+        <RouteComponent exact={Route.exact} key={Route.path} path={`${parent}${Route.path}`} component={Route.Loadable} />
+      ];
   }
   return Routes;
 };
 
-export function AppRouter(): ReactElement {
+function AppRouter(): ReactElement {
   return <Switch>{HandleRoutes(AppRoutes)}</Switch>;
 }
+
+export default AppRouter;

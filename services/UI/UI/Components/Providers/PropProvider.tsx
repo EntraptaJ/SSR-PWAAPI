@@ -1,7 +1,7 @@
 // UI/ui/Components/Providers/PropProvider.tsx
 import React, { createContext, ReactNode, useState, FunctionComponent } from 'react';
 import { Context } from 'koa';
-import { globalHistory, HistoryListenerParameter } from '@reach/router';
+import useLocation from 'use-react-router';
 
 export let Props: Promise<any>;
 
@@ -41,7 +41,7 @@ interface PropProviderProps {
   sessionProps: PathPropsObject[];
 }
 
-export let setNewProps: (c: HistoryListenerParameter) => Promise<boolean>;
+export let setNewProps: () => Promise<boolean>;
 
 export let setProps: (props: any) => void;
 
@@ -50,8 +50,10 @@ const timeout = (ms: number): Promise<void> => new Promise(resolve => setTimeout
 export const PropProvider: FunctionComponent<PropProviderProps> = prop => {
   const { ctx, children, sessionProps } = prop;
   const [pageProps, setPageProps] = useState(prop.props);
+  const { location } = useLocation();
+
   const useProps = (newProp: getProp): void => {
-    const oldProps = sessionProps.find(({ path: pth }) => pth === (ctx ? ctx.path : globalHistory.location.pathname));
+    const oldProps = sessionProps.find(({ path: pth }) => pth === (ctx ? ctx.path : location.pathname));
 
     if (oldProps) Props = oldProps.props;
     else Props = newProp(ctx);
@@ -59,8 +61,8 @@ export const PropProvider: FunctionComponent<PropProviderProps> = prop => {
 
   setProps = (props: any) => setPageProps(props);
 
-  setNewProps = async (c: HistoryListenerParameter) => {
-    const oldProps = sessionProps.find(({ path: pth }) => pth === c.location.pathname);
+  setNewProps = async () => {
+    const oldProps = sessionProps.find(({ path: pth }) => pth === location.pathname);
 
     if (oldProps) {
       setPageProps(oldProps.props || {});
@@ -71,7 +73,7 @@ export const PropProvider: FunctionComponent<PropProviderProps> = prop => {
       await timeout(50);
       if (typeof (await Props) === 'undefined') return false;
       const localProps = await Props;
-      sessionProps.push({ path: c.location.pathname, props: localProps || {} });
+      sessionProps.push({ path: location.pathname, props: localProps || {} });
       setPageProps(localProps || {});
     }
     // @ts-ignore

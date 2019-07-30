@@ -1,6 +1,6 @@
 // UI/UI/Components/Router/types.tsx
-import { LoadableType } from './Loadable'
-import { RouteComponentProps } from '@reach/router';
+import { LoadableType } from './Loadable';
+
 export interface AppRoute {
   /**
    * Route Path for Router Route Component
@@ -25,7 +25,22 @@ export interface AppRoute {
    */
   authMode?: boolean;
 
+  /**
+   * Hide UI. Wether the AppBar and NavBar are hidden on this route
+   */
+  hideUI?: boolean;
+
+  /**
+   * Exact
+   */
+  exact?: boolean;
+
+  /**
+   * Hidden from Lists
+   */
+  hidden?: boolean;
+
   children?: AppRoute[];
 
-  Loadable?: LoadableType<RouteComponentProps>;
+  Loadable?: LoadableType<any>;
 }
