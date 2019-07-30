@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Arg, Authorized, Ctx, ObjectType, Field } from 'type-graphql';
+import { Resolver, Query, Mutation, Arg, Authorized, Ctx, ObjectType, Field, ForbiddenError } from 'type-graphql';
 import { ApolloError } from 'apollo-server-koa';
 import { UserModel, User, NewUserInput } from '../../Models/User';
 import { Context } from '../Context';
@@ -18,12 +18,6 @@ export default class AuthResolver {
   public async isAuthed(@Ctx() { user }: Context): Promise<boolean> {
     if (!user) return false;
     else return true;
-  }
-
-  @Query(returns => String, { description: 'Decrypts the Users secret' })
-  @Authorized()
-  public async getSecret(@Arg('password') plainText: string, @Ctx() { user }: Context): Promise<string> {
-    return user.decryptSecret(plainText);
   }
 
   @Query(returns => User)

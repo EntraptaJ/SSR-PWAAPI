@@ -16,19 +16,19 @@ export function Form<T>({
   onSubmit,
   noSubmit = false,
   Fields,
-  invalid = { Field: '', Text: undefined },
+  invalid = undefined,
   submitLabel = title
 }: PropsWithChildren<FormProps<T>>): React.ReactElement {
   const { register, handleSubmit } = useForm<T>();
 
-  const isInvalid = (fieldName: string): boolean => invalid.Field === fieldName;
+  const isInvalid = (fieldName: string): boolean => (invalid ? invalid.invalidField === fieldName : false);
 
   return (
     // @ts-ignore
     <Box title={title} component='form' onSubmit={handleSubmit(onSubmit)}>
-      {invalid.Field && (
+      {invalid && (
         <FormHelperText error style={{ color: '#b00020' }}>
-          {invalid.Text}
+          {invalid.errorMessage}
         </FormHelperText>
       )}
 

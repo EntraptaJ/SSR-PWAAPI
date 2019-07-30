@@ -1,8 +1,14 @@
 // UI/UI/Components/Layout/Forms/LoginForm/index.tsx
 import React, { useState, useEffect } from 'react';
-import { useLogin } from 'UI/Components/Providers/SessionProvider';
 import { Form } from 'UI/Components/Style/Form';
 import { ApolloError } from 'apollo-client';
+import REGISTER_USER_GQL from './registerUser.graphql';
+import { useMutation } from '@apollo/react-hooks';
+
+interface FormData {
+  username: string;
+  password: string;
+}
 
 interface FormData {
   username: string;
@@ -18,14 +24,9 @@ interface ErrorItem {
 
 const Errors: ErrorItem[] = [
   {
-    message: `Access denied! You don't have permission for this action!`,
-    errorMessage: 'Password is Invalid',
-    invalidField: 'password'
-  },
-  {
     code: 'INVALID_USER',
     invalidField: 'username',
-    errorMessage: 'Username is invalid'
+    errorMessage: 'Username is already taken'
   }
 ];
 
@@ -45,13 +46,17 @@ const processError = ({ graphQLErrors }: ApolloError): ErrorItem | undefined => 
   return undefined;
 };
 
-export function LoginForm(): React.ReactElement {
-  const [loginUser, { error }] = useLogin();
+interface User {
+  username: string;
+}
+
+export function RegisterForm(): React.ReactElement {
+  const [registerUserFN, { error }] = useMutation<{ registerUser: User }, { user: FormData }>(REGISTER_USER_GQL);
   const [invalid, setInvalid] = useState<ErrorItem>();
 
   const onSubmit = async (data: FormData): Promise<void> => {
-    const response = await loginUser(data);
-    if (response) window.location.href = '/';
+    const response = await registerUserFN({ variables: { user: data } });
+    if (response) window.location.href = '/Login';
   };
 
   useEffect(() => {
@@ -60,12 +65,12 @@ export function LoginForm(): React.ReactElement {
 
   return (
     <Form<FormData>
-      title='Login'
+      title='Register'
       invalid={invalid}
       onSubmit={onSubmit}
       Fields={[
         { label: 'Username', name: 'username', type: 'Text', inputType: 'text', autoComplete: 'username' },
-        { label: 'Password', name: 'password', type: 'Text', inputType: 'password', autoComplete: 'current-password' }
+        { label: 'Password', name: 'password', type: 'Text', inputType: 'password', autoComplete: 'new-password' }
       ]}
     />
   );

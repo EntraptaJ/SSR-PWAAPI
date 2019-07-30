@@ -4,8 +4,8 @@ import { RegisterInput } from 'react-hook-form/dist/types';
 export type FieldTypes = 'Text' | 'Select';
 
 export interface Invalid {
-  Field: string;
-  Text?: string;
+  invalidField?: string;
+  errorMessage: string;
 }
 
 export enum HTMLInputTypesENUM {

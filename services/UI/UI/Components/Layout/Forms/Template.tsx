@@ -1,9 +1,12 @@
-// UI/UI/Components/Layout/Forms/LoginForm/index.tsx
+// UI/UI/Components/Layout/Forms/XYZ/index.tsx
 import React, { useState, useEffect } from 'react';
-import { useLogin } from 'UI/Components/Providers/SessionProvider';
 import { Form } from 'UI/Components/Style/Form';
+import { useMutation } from '@apollo/react-hooks';
 import { ApolloError } from 'apollo-client';
 
+/**
+ * Put field types here
+ */
 interface FormData {
   username: string;
   password: string;
@@ -17,11 +20,7 @@ interface ErrorItem {
 }
 
 const Errors: ErrorItem[] = [
-  {
-    message: `Access denied! You don't have permission for this action!`,
-    errorMessage: 'Password is Invalid',
-    invalidField: 'password'
-  },
+  { message: `GraphQL error: Access denied! You don't have permission for this action!`, errorMessage: 'Password is Invalid' },
   {
     code: 'INVALID_USER',
     invalidField: 'username',
@@ -29,33 +28,32 @@ const Errors: ErrorItem[] = [
   }
 ];
 
-const processError = ({ graphQLErrors }: ApolloError): ErrorItem | undefined => {
-  for (const error of graphQLErrors) {
-    const Item = Errors.find(itm =>
-      Object.entries(error).some(([type, value]) =>
-        value !== 'null' && typeof value === 'object'
-          ? Object.entries(value).some(
-              ([type, value]) => typeof itm[type as keyof ErrorItem] !== 'undefined' && itm[type as keyof ErrorItem] === value
-            )
-          : typeof itm[type as keyof ErrorItem] !== 'undefined' && itm[type as keyof ErrorItem] === value
-      )
-    );
-    if (Item) return Item;
-  }
-  return undefined;
-};
+const processError = (errorItem: ErrorItem, error: ApolloError) => {
+  const Test = Object.entries(errorItem).every(([type, value]) => error[type as keyof ApolloError].includes(value));
+  console.log(Test)
+
+}
+
+type Invalid = { Field: string; Text: string } | { Field: ''; Text: undefined };
 
 export function LoginForm(): React.ReactElement {
-  const [loginUser, { error }] = useLogin();
+  // @ts-ignore Remove this once you add your .graphql Import
+  const [test, { error }] = useMutation();
   const [invalid, setInvalid] = useState<ErrorItem>();
 
   const onSubmit = async (data: FormData): Promise<void> => {
-    const response = await loginUser(data);
+    // Insert Mutation here
+    const response = { data: 'test' };
     if (response) window.location.href = '/';
   };
 
   useEffect(() => {
-    if (typeof error !== 'undefined') setInvalid(processError(error));
+    if (typeof error !== 'undefined') {
+
+      if (error.message === AuthError) setInvalid({ Field: 'password', Text: 'Password is Invalid' });
+      else if (error.graphQLErrors[0].extensions && error.graphQLErrors[0].extensions.code === 'INVALID_USER')
+        setInvalid({ Field: 'username', Text: 'Username is invalid' });
+    }
   }, [error]);
 
   return (

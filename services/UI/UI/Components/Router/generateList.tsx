@@ -1,7 +1,7 @@
 // UI/UI/Components/Router/generateList.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AppRoute } from 'UI/Components/Router/types';
-import { ParentListItem } from '../Style/Lists/ListItem/ParetListItem';
+import { ParentListItem } from '../Style/Lists/ListItem/ParentListItem';
 import { LinkListItem } from '../Style/Lists/ListItem/LinkListItem';
 import useReactRouter from 'use-react-router';
 import { BaseList } from '../Style/Lists/BaseList';
@@ -15,7 +15,7 @@ export function RouteList(props: { routes: AppRoute[] }): React.ReactElement {
   const { isAuthed } = useIsAuthed();
 
   const generateRoutesList = (routes: AppRoute[], path: string = '/'): React.ReactElement[] =>
-    routes.map(({ authMode, ...route }) =>
+    routes.map(({ authMode, Loadable, exact, ...route }) =>
       route.children ? (
         route.hidden || (authMode !== isAuthed && typeof authMode !== 'undefined') ? (
           <React.Fragment key={route.to}>{generateRoutesList(route.children)}</React.Fragment>
@@ -32,5 +32,5 @@ export function RouteList(props: { routes: AppRoute[] }): React.ReactElement {
       )
     );
 
-  return <BaseList>{generateRoutesList(props.routes, location.pathname)}</BaseList>;
+  return useMemo(() => <BaseList>{generateRoutesList(props.routes, location.pathname)}</BaseList>, []);
 }

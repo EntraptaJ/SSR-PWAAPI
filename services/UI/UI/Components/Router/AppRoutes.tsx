@@ -11,6 +11,30 @@ export const AppRoutes: AppRoute[] = [
     Loadable: Loadable(import('UI/Routes/Home/index'), 'Routes/Home/index.tsx')
   },
   {
+    label: 'Login',
+    path: 'Login',
+    to: '/Login',
+    authMode: false,
+    Loadable: Loadable(import('UI/Routes/Authentication/Login'), 'UI/Routes/Authentication/Login.tsx')
+  },
+  {
+    label: 'Register',
+    path: 'Register',
+    to: '/Register',
+    authMode: false,
+    Loadable: Loadable(import('UI/Routes/Authentication/Register'), 'UI/Routes/Authentication/Register.tsx')
+  },
+  {
+    label: 'Setup',
+    path: 'Setup',
+    to: '/Setup',
+    authMode: false,
+    hideUI: true,
+    hidden: true,
+    exact: true,
+    Loadable: Loadable(import('UI/Routes/Authentication/Login'), 'UI/Routes/Authentication/Login.tsx')
+  },
+  {
     label: 'Test Route',
     path: 'TestRoute',
     to: '/TestRoute',

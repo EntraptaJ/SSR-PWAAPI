@@ -1,5 +1,5 @@
 // UI/server/server.tsx
-import { getDataFromTree } from '@apollo/react-hooks';
+import { getDataFromTree } from '@apollo/react-ssr';
 import { renderPortalsToString } from 'react-portalize/server';
 import { ServerStyleSheets } from '@material-ui/styles';
 import { readJSON } from 'fs-extra';

@@ -21,7 +21,7 @@ export default function NavDrawer(): React.ReactElement {
   return useMemo(
     () => (
       <>
-        <Portalize container='#navActions'>
+        <Portalize server={true} container='#navActions'>
           <IconButton className={classes.menuButton} onClick={() => setNavOpen(!navOpen)}>
             <MenuIcon />
           </IconButton>

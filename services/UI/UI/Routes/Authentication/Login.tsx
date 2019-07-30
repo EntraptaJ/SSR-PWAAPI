@@ -1,4 +1,4 @@
-// UI/UI/Routes/Authenication/Login.tsx
+// UI/UI/Routes/Authentication/Login.tsx
 import React from 'react';
 import { LoginForm } from 'UI/Components/Layout/Forms/LoginForm';
 

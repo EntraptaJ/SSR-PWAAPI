@@ -1,6 +1,6 @@
 // UI/UI/Components/Providers/SessionProvider/SessionActions.tsx
 import React, { FunctionComponent, useMemo, MouseEvent, useState } from 'react';
-import { useIsAuthed } from 'UI/Components/Providers/SessionProvider';
+import { useIsAuthed, useLogout } from 'UI/Components/Providers/SessionProvider';
 import IconButton from '@material-ui/core/IconButton';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import Menu from '@material-ui/core/Menu';
@@ -8,6 +8,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 
 export const SessionActions: FunctionComponent = () => {
   const { isAuthed } = useIsAuthed();
+  const [logoutFN] = useLogout();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -15,14 +16,14 @@ export const SessionActions: FunctionComponent = () => {
 
   const handleClose = (): void => setAnchorEl(null);
 
-  const onMenuItem = (option: string) => (): void => {
-    if (option === 'Logout') console.log('Logout');
+  const onMenuItem = (option: string): (() => void) => () => {
+    if (option === 'Logout') logoutFN();
     handleClose();
   };
 
   return useMemo(
     () =>
-      isAuthed ? (
+      !isAuthed ? (
         <></>
       ) : (
         <>
