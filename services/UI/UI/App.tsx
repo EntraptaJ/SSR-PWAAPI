@@ -1,12 +1,13 @@
 // UI/UI/App.tsx
-import React from 'react';
+import React, { useMemo } from 'react';
 import Loadable from 'react-loadable';
-import { useRoute } from './Components/Router/useRoute';
-import useReactRouter from 'use-react-router';
 import { ThemeProvider } from '@material-ui/styles';
 import { theme } from 'UI/Components/Style/Theme';
 import SessionProvider, { useIsAuthed } from './Components/Providers/SessionProvider';
-import { Redirect } from 'react-router-dom';
+import { AppRoutes } from './Components/Router/AppRoutes';
+import useRouter from 'use-react-router';
+import AppRouter from './Components/Router';
+import { Redirect } from 'react-router';
 
 const LoadingProgress = (): React.ReactElement => {
   return <></>;
@@ -16,12 +17,6 @@ const CssBaseline = Loadable({
   loader: () => import('@material-ui/core/CssBaseline'),
   loading: LoadingProgress,
   modules: ['@material-ui/core/esm/CssBaseline/index.js']
-});
-
-const AppRouter = Loadable({
-  loader: () => import('UI/Components/Router'),
-  loading: LoadingProgress,
-  modules: ['Components/Router/index.tsx']
 });
 
 const NavDrawer = Loadable({
@@ -37,15 +32,16 @@ const AppBar = Loadable({
 });
 
 function AppBody(): React.ReactElement {
-  const { location } = useReactRouter();
-  const route = useRoute(location.pathname);
+  const { location } = useRouter();
   const { isAuthed } = useIsAuthed();
+  const route = useMemo(() => AppRoutes.find(({ to }) => location.pathname === to), [location.pathname]);
+
   const isAuthorized = !route || typeof route.authMode === 'undefined' || route.authMode === isAuthed;
+
   return (
     <>
       {!route || !route.hideUI ? <AppBar /> : <></>}
       {!route || !route.hideUI ? <NavDrawer /> : <></>}
-
       <main
         style={{
           display: 'flex',
@@ -61,12 +57,11 @@ function AppBody(): React.ReactElement {
   );
 }
 
-function App(): React.ReactElement {
+export function App(): React.ReactElement {
   return (
     <ThemeProvider theme={theme}>
       <SessionProvider>
         <CssBaseline />
-
         <AppBody />
       </SessionProvider>
     </ThemeProvider>

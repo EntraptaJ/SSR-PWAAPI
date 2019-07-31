@@ -1,6 +1,8 @@
 import { copy, mkdir, remove, writeJSON, pathExists } from 'fs-extra';
 import ParcelBundler from 'parcel-bundler';
 import { entryPointHandler, CSS } from './CSSManifest';
+// @ts-ignore
+import resizer from 'node-image-resizer';
 
 export const build = async (watch: boolean = false): Promise<void> => {
   await remove('dist');
@@ -27,7 +29,7 @@ export const build = async (watch: boolean = false): Promise<void> => {
   await bundler.bundle();
 
   process.env['BABEL_ENV'] = 'server';
-  const serverBundler = new ParcelBundler(['server/index.ts', 'server/server.urls'], {
+  const serverBundler = new ParcelBundler(['server/index.ts', 'server/server.urls', 'server/service-worker.ts'], {
     outDir: 'dist/server',
     watch,
     target: 'node',
@@ -40,6 +42,36 @@ export const build = async (watch: boolean = false): Promise<void> => {
     // @ts-ignore
     bundler.options.entryFiles.length > 1 ? bundle.childBundles.forEach(entryPointHandler) : entryPointHandler(bundle)
   );
-  await serverBundler.bundle();
+  try {
+    await serverBundler.bundle();
+  } catch {
+    console.log('Server Build Error');
+  }
+
   await writeJSON('dist/CSS.json', CSS);
+  await generateIcons()
+};
+
+const generateIcons = async () => {
+  const setup = {
+    all: {
+      path: 'dist/public/',
+      quality: 100
+    },
+    versions: [
+      {
+        prefix: '192',
+        width: 192,
+        height: 192
+      },
+      {
+        quality: 100,
+        prefix: '512',
+        width: 512,
+        height: 512
+      }
+    ]
+  };
+
+  const thumbs = await resizer('icons/main.png', setup);
 };

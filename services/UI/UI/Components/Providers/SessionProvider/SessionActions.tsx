@@ -21,45 +21,41 @@ export const SessionActions: FunctionComponent = () => {
     handleClose();
   };
 
-  return useMemo(
-    () =>
-      !isAuthed ? (
-        <></>
-      ) : (
-        <>
-          <IconButton
-            aria-label='Account of current user'
-            aria-controls='menu-appbar'
-            aria-haspopup='true'
-            onClick={handleMenu}
-            color='inherit'
-          >
-            <AccountCircle />
-          </IconButton>
-          <Menu
-            id='menu-appbar'
-            anchorEl={anchorEl}
-            getContentAnchorEl={null}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'center'
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'center'
-            }}
-            PaperProps={{
-              style: {
-                top: '4.05em'
-              }
-            }}
-            open={open}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={onMenuItem('Logout')}>Logout</MenuItem>
-          </Menu>
-        </>
-      ),
-    [isAuthed, open]
+  return !isAuthed ? (
+    <></>
+  ) : (
+    <>
+      <IconButton
+        aria-label='Account of current user'
+        aria-controls='menu-appbar'
+        aria-haspopup='true'
+        onClick={handleMenu}
+        color='inherit'
+      >
+        <AccountCircle />
+      </IconButton>
+      <Menu
+        id='menu-appbar'
+        anchorEl={anchorEl}
+        getContentAnchorEl={null}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center'
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'center'
+        }}
+        PaperProps={{
+          style: {
+            top: '4.05em'
+          }
+        }}
+        open={open}
+        onClose={handleClose}
+      >
+        <MenuItem onClick={onMenuItem('Logout')}>Logout</MenuItem>
+      </Menu>
+    </>
   );
 };

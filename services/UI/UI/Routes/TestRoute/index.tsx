@@ -2,5 +2,5 @@
 import React from 'react';
 
 export default function TestRoute(): React.ReactElement {
-  return <p>Test</p>;
+  return <p>Hello World</p>;
 }

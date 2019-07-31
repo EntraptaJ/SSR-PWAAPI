@@ -22,7 +22,7 @@ const timeout = (ms: number): Promise<void> => new Promise(resolve => setTimeout
 export default class ItemsResolvers {
   @Query(returns => [Item])
   public async getItems(): Promise<Item[]> {
-    await timeout(30000);
+    await timeout(1500);
     return Items;
   }
 }

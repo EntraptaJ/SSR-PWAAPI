@@ -5,7 +5,7 @@ import { Box } from 'UI/Components/Style/Box';
 export default function HomeRoute(): React.ReactElement {
   return (
     <Box title='Home Route'>
-      <p>Hello</p>
+      <p>Home</p>
     </Box>
   );
 }

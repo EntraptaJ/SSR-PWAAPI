@@ -1,0 +1,20 @@
+{
+  "short_name": "KFJ Design",
+  "name": "KFJ Design",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "/192main.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/512main.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#eee",
+  "theme_color": "#18ffff"
+}

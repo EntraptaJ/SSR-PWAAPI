@@ -3,7 +3,7 @@ import React, { createContext, ReactNode, useContext, FunctionComponent } from '
 
 export interface Config {
   baseUrl: string;
-  appName: string
+  appName: string;
 }
 
 const ConfigContext = createContext<Config>({

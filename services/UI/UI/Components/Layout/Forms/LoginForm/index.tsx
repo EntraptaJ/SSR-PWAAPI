@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLogin } from 'UI/Components/Providers/SessionProvider';
 import { Form } from 'UI/Components/Style/Form';
 import { ApolloError } from 'apollo-client';
+import useRouter from 'use-react-router'
 
 interface FormData {
   username: string;
@@ -48,10 +49,10 @@ const processError = ({ graphQLErrors }: ApolloError): ErrorItem | undefined => 
 export function LoginForm(): React.ReactElement {
   const [loginUser, { error }] = useLogin();
   const [invalid, setInvalid] = useState<ErrorItem>();
-
+  const { history } = useRouter();
   const onSubmit = async (data: FormData): Promise<void> => {
     const response = await loginUser(data);
-    if (response) window.location.href = '/';
+    if (response) history.push('/');
   };
 
   useEffect(() => {

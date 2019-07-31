@@ -2,14 +2,21 @@
 import { ApolloClient } from 'apollo-client';
 import { createHttpLink } from 'apollo-link-http';
 import { NormalizedCacheObject, InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloCache } from 'apollo-cache';
 
 interface InitClientParams {
   baseUrl: string;
   initialState?: NormalizedCacheObject;
   token?: string;
+  cache?: ApolloCache<any>;
 }
 
-export const initApollo = ({ baseUrl, initialState, token }: InitClientParams): ApolloClient<NormalizedCacheObject> =>
+export const initApollo = ({
+  baseUrl,
+  initialState,
+  token,
+  cache = new InMemoryCache().restore(initialState || {})
+}: InitClientParams): ApolloClient<NormalizedCacheObject> =>
   new ApolloClient({
     connectToDevTools: process.browser,
     ssrMode: !process.browser,
@@ -17,5 +24,5 @@ export const initApollo = ({ baseUrl, initialState, token }: InitClientParams): 
       uri: `${baseUrl}/graphql`,
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     }),
-    cache: new InMemoryCache().restore(initialState || {})
+    cache: cache
   });

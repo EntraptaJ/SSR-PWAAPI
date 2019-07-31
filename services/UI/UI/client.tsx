@@ -7,6 +7,7 @@ import { PropProvider } from 'UI/Components/Providers/PropProvider';
 import { ConfigProvider } from 'UI/Components/Providers/ConfigProvider';
 import { CookiesProvider } from 'react-cookie';
 import { ApolloProvider } from 'UI/Components/Providers/ApolloProvider';
+import { ApolloCache } from 'apollo-cache';
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async function() {
@@ -15,12 +16,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-const Main: FunctionComponent = ({ children }) => {
+const Main: FunctionComponent<{ cache?: ApolloCache<any> }> = ({ children, cache }) => {
   useEffect(() => {
     const jssStyles = document.querySelector('#jss-server-side');
-    if (jssStyles && jssStyles.parentNode) {
-      jssStyles.parentNode.removeChild(jssStyles);
-    }
+    if (jssStyles && jssStyles.parentNode) jssStyles.parentNode.removeChild(jssStyles);
   }, []);
 
   return (
@@ -28,7 +27,7 @@ const Main: FunctionComponent = ({ children }) => {
       <ConfigProvider {...window.APP_STATE.CONFIG}>
         <PropProvider sessionProps={[]} props={window.APP_STATE.PROPS}>
           <CookiesProvider>
-            <ApolloProvider>{children}</ApolloProvider>
+            <ApolloProvider cache={cache}>{children}</ApolloProvider>
           </CookiesProvider>
         </PropProvider>
       </ConfigProvider>
@@ -36,21 +35,33 @@ const Main: FunctionComponent = ({ children }) => {
   );
 };
 
-const render = async (renderFunction: import('react-dom').Renderer): Promise<void> => {
-  const { default: App } = await import('UI/App');
+const render = async (renderFunction: import('react-dom').Renderer, cache?: ApolloCache<any>): Promise<void> => {
+  const { App } = await import('UI/App');
+
   renderFunction(
-    <Main>
+    <Main cache={cache}>
       <App />
     </Main>,
     document.getElementById('app')
   );
 };
 
-preloadReady().then(() => render(hydrate));
+preloadReady().then(async () => {
+  const [{ InMemoryCache }, { persistCache }] = await Promise.all([
+    import('apollo-cache-inmemory'),
+    import('apollo-cache-persist')
+  ]);
+
+  const cache = new InMemoryCache().restore(window.APP_STATE.APOLLO_STATE);
+
+  await persistCache({
+    cache,
+    // @ts-ignore
+    storage: window.localStorage
+  });
+
+  render(hydrate, cache);
+});
 
 const hot = (module as any).hot;
-if (hot && hot.accept) {
-  hot.accept(async () => {
-    render(ReactDOMRender);
-  });
-}
+if (hot && hot.accept) hot.accept(async () => render(ReactDOMRender));

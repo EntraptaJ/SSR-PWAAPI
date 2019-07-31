@@ -5,6 +5,8 @@ RUN npm install
 COPY ./server/ ./server/
 COPY ./UI/ ./UI/
 COPY ./bin/ ./bin/
+COPY ./icons/ ./icons/
+COPY ./public/ ./public/
 RUN NODE_ENV=production npm run build
 
 FROM mhart/alpine-node:latest

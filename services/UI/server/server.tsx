@@ -13,7 +13,7 @@ import { CookiesProvider } from 'react-cookie';
 import { renderToString } from 'react-dom/server';
 import { Capture, preloadAll } from 'react-loadable';
 import { StaticRouter, StaticRouterContext } from 'react-router';
-import App from 'UI/App';
+import { App } from 'UI/App';
 import { ApolloProvider } from 'UI/Components/Providers/ApolloProvider';
 import { Config, ConfigProvider } from 'UI/Components/Providers/ConfigProvider';
 import { PathPropsObject, PropProvider, Props } from 'UI/Components/Providers/PropProvider';
@@ -35,11 +35,7 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
   let sessionProps: PathPropsObject[] = [];
   let localProps: any;
 
-  const sources: Source[] = [
-    { type: 'script', src: parcelManifest['client.tsx'] },
-    { type: 'style', src: 'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap' },
-    { type: 'style', src: 'https://fonts.googleapis.com/icon?family=Material+Icons' }
-  ];
+  const sources: Source[] = [{ type: 'script', src: parcelManifest['client.tsx'] }];
   const modules: string[] = [];
 
   await preloadAll();
