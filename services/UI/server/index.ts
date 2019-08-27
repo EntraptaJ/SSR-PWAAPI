@@ -5,6 +5,8 @@ import Router from 'koa-router';
 import serve from 'koa-static';
 import { readJSON } from 'fs-extra';
 import cookiesMiddleware from 'universal-cookie-koa';
+import { initApollo } from './initApollo';
+import { checkIsSetup, getConfig } from './Settings';
 
 const port = 81;
 
@@ -17,12 +19,25 @@ const startServer = async (): Promise<void> => {
   const server = new Koa();
   const router = new Router();
 
+  const client = initApollo();
+
+  const setupTEST = (path: string): boolean => /Setup$/.test(path);
+
   server.use(cookiesMiddleware());
 
   router.get('*', serve('dist/public'));
 
+  router.get('*', async (ctx, next) => {
+    const isSetup = await checkIsSetup(client);
+    if (isSetup && setupTEST(ctx.path)) return ctx.redirect('/');
+    else if (isSetup) return next();
+    else if (!isSetup && !setupTEST(ctx.path)) return ctx.redirect('/Setup');
+    else if (/Setup$/.test(ctx.path)) return next();
+  });
+
   router.get('*', async ctx => {
     let { uiServer } = await loadServer();
+    const Settings = await getConfig(client);
     if (process.env.NODE_ENV === 'development') {
       const chokidar = await import('chokidar');
       chokidar
@@ -36,7 +51,10 @@ const startServer = async (): Promise<void> => {
           process.stdout.write('✅\n');
         });
     }
-    return uiServer(ctx, { baseUrl: process.env['BASEURL'] as string, appName: `Kristian's Lab` });
+    return uiServer(ctx, {
+      baseUrl: process.env['BASEURL'] as string,
+      appName: Settings && Settings.appName ? Settings.appName : ''
+    });
   });
 
   server.use(router.routes()).use(router.allowedMethods());

@@ -7,15 +7,19 @@ import LOGIN_GQL from 'UI/GraphQL/loginUser.graphql';
 import { useCookies } from 'react-cookie';
 import { MutationResult } from '@apollo/react-common';
 
+export type UserRole = 'Guest' | 'User' | 'Admin';
+
 export interface Session {
   isAuthed: boolean;
+  role: UserRole[];
 }
 
 const SessionContext = createContext<Session>({
-  isAuthed: false
+  isAuthed: false,
+  role: ['Guest']
 });
 
-type useIsAuthedType = () => { isAuthed: boolean };
+type useIsAuthedType = () => { isAuthed: boolean; role: UserRole[] };
 
 export const useToken = (): [string, setToken, deleteToken] => {
   const [token, setCookieToken, deleteCookieToken] = useCookies();
@@ -26,8 +30,9 @@ export const useToken = (): [string, setToken, deleteToken] => {
 
 export const useIsAuthed: useIsAuthedType = () => {
   const [token] = useToken();
-  const { data, refetch } = useQuery<{ isAuthed: boolean }>(ISAUTHED_GQL);
-  const isAuthed = data ? data.isAuthed : false;
+  const { data, refetch } = useQuery<{ userCheck: { isAuthed: boolean; role: UserRole[] } }>(ISAUTHED_GQL);
+  const isAuthed = data && data.userCheck ? data.userCheck.isAuthed : false;
+  const role = data && data.userCheck ? data.userCheck.role : (['Guest'] as UserRole[]);
 
   const isFirstRun = useRef(true);
   useEffect(() => {
@@ -37,13 +42,11 @@ export const useIsAuthed: useIsAuthedType = () => {
     }
     if (typeof refetch === 'function') refetch();
   }, [token]);
-
-  return { isAuthed };
+  return { isAuthed, role: role };
 };
 
 const SessionProvider: FunctionComponent = ({ children }) => {
   const sessionValue = useIsAuthed();
-
   return <SessionContext.Provider value={sessionValue}>{children}</SessionContext.Provider>;
 };
 
@@ -61,6 +64,7 @@ interface User {
 interface LoginUserResponse {
   success: boolean;
   token: string;
+  role: 'User' | 'Admin';
 }
 
 type LoginType = (user: User) => Promise<boolean>;

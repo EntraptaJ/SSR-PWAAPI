@@ -1,7 +1,8 @@
 import { prop, Typegoose, pre, instanceMethod } from 'typegoose';
 import { compare, hash } from 'bcrypt';
 import { sign } from 'jsonwebtoken';
-import { ForbiddenError, ObjectType, Field, InputType } from 'type-graphql';
+import { ForbiddenError, ObjectType, Field, InputType, registerEnumType } from 'type-graphql';
+import { ObjectId } from 'mongodb';
 
 export enum IPermissionENUM {
   READ,
@@ -11,7 +12,19 @@ export enum IPermissionENUM {
 
 export type IPermission = 'READ' | 'WRITE' | 'ADMIN' | IPermissionENUM;
 
-export type Role = 'User' | 'Admin';
+export type Role = 'User' | 'Admin' | 'Guest';
+
+export enum UserRoleEnum {
+  'User' = 'User',
+  'Admin' = 'Admin',
+  'Guest' = 'Guest'
+}
+
+export type UserRole = Role | UserRoleEnum;
+
+registerEnumType(UserRoleEnum, {
+  name: 'UserRole'
+});
 
 @pre<User>('save', async function(next): Promise<void> {
   if (!this.isModified('password')) return next();
@@ -19,11 +32,11 @@ export type Role = 'User' | 'Admin';
 })
 @ObjectType()
 export class User extends Typegoose {
-  @Field(type => String)
-  public _id: string;
+  @Field()
+  public _id: ObjectId;
 
   @prop({ unique: true })
-  @Field(type => String)
+  @Field()
   public username: string;
 
   @prop()

@@ -8,20 +8,24 @@ const HandleRoutes = (routes: AppRoute[], parent: string = '/'): ReactElement[] 
   let Routes: ReactElement[] = [];
   for (const Route of routes) {
     if (Route.children) {
-      if (typeof Route.Loadable !== 'undefined')
-        Routes = [
-          ...Routes,
-          <RouteComponent
-            key={Route.path}
-            path={`${parent}${Route.path}`}
-            render={() => (
-              <>
-                <RouteComponent key={Route.path} path={`${parent}${Route.path}/`} exact component={Route.Loadable} />
-                {HandleRoutes(Route.children, `${parent}${Route.path}/`)}
-              </>
-            )}
-          />
-        ];
+      Routes = [
+        ...Routes,
+        <RouteComponent
+          key={Route.path}
+          path={`${parent}${Route.path}`}
+          render={() => (
+            <>
+              <RouteComponent
+                key={Route.path}
+                path={`${parent}${Route.path}/`}
+                exact
+                component={Route.Loadable ? Route.Loadable : () => <>404</>}
+              />
+              {HandleRoutes(Route.children, `${parent}${Route.path}/`)}
+            </>
+          )}
+        />
+      ];
     } else if (typeof Route.Loadable !== 'undefined')
       Routes = [
         ...Routes,

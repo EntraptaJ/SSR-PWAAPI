@@ -1,14 +1,14 @@
 // UI/UI/Components/Style/Form/index.tsx
 import React, { PropsWithChildren, CSSProperties } from 'react';
-import { Box } from 'UI/Components/Style/Box';
+import clsx from 'clsx';
+import { useStyles } from 'UI/Components/Style/Form/Styles';
 import useForm from 'react-hook-form';
 
-import TextField from '@material-ui/core/TextField';
-import FormHelperText from '@material-ui/core/FormHelperText';
+import { TextField, FormHelperText, Typography, Paper } from '@material-ui/core';
 import { BaseButton } from 'UI/Components/Style/Buttons/BaseButton';
 import { FormProps } from './type';
 
-const FieldStyle: CSSProperties = { marginTop: '1em', width: '100%' };
+const FieldStyle: CSSProperties = {};
 
 export function Form<T>({
   title,
@@ -20,31 +20,37 @@ export function Form<T>({
   submitLabel = title
 }: PropsWithChildren<FormProps<T>>): React.ReactElement {
   const { register, handleSubmit } = useForm<T>();
+  const classes = useStyles();
 
   const isInvalid = (fieldName: string): boolean => (invalid ? invalid.invalidField === fieldName : false);
 
   return (
-    // @ts-ignore
-    <Box title={title} component='form' onSubmit={handleSubmit(onSubmit)}>
-      {invalid && (
-        <FormHelperText error style={{ color: '#b00020' }}>
-          {invalid.errorMessage}
-        </FormHelperText>
-      )}
+    <section className={clsx(classes.section)}>
+      <Paper component='form' onSubmit={handleSubmit(onSubmit)} className={clsx(classes.form)}>
+        <Typography variant='h4' align='center'>
+          {title}
+        </Typography>
 
-      {Fields.map(({ registerOpts, inputType, type, ...props }) => (
-        <TextField
-          key={props.name}
-          type={inputType}
-          variant='outlined'
-          style={FieldStyle}
-          error={isInvalid(props.name)}
-          inputRef={registerOpts ? register(registerOpts) : register}
-          {...props}
-        />
-      ))}
-      {children}
-      {!noSubmit && <BaseButton color='primary' fullWidth variant='contained' submit label={submitLabel} />}
-    </Box>
+        {invalid && (
+          <FormHelperText error style={{ color: '#b00020' }}>
+            {invalid.errorMessage}
+          </FormHelperText>
+        )}
+
+        {Fields.map(({ registerOpts, inputType, type, ...props }) => (
+          <TextField
+            key={props.name}
+            type={inputType}
+            variant='outlined'
+            className={clsx(classes.fieldStyle)}
+            error={isInvalid(props.name)}
+            inputRef={registerOpts ? register(registerOpts) : register}
+            {...props}
+          />
+        ))}
+        {children}
+        {!noSubmit && <BaseButton color='primary' fullWidth variant='contained' submit label={submitLabel} />}
+      </Paper>
+    </section>
   );
 }

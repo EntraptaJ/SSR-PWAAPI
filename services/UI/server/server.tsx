@@ -5,7 +5,6 @@ import { ServerStyleSheets } from '@material-ui/styles';
 import { readJSON } from 'fs-extra';
 import 'isomorphic-unfetch';
 import { Context } from 'koa';
-import MultiStream from 'multistream';
 import { renderAppHeadStream } from 'server/Head';
 import { renderScripts } from 'server/Sources';
 import React from 'react';
@@ -35,7 +34,11 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
   let sessionProps: PathPropsObject[] = [];
   let localProps: any;
 
-  const sources: Source[] = [{ type: 'script', src: parcelManifest['client.tsx'] }];
+  const sources: Source[] = [
+    { type: 'script', src: parcelManifest['client.tsx'] },
+    { type: 'style', src: 'https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap' },
+    { type: 'style', src: 'https://fonts.googleapis.com/icon?family=Material+Icons' }
+  ];
   const modules: string[] = [];
 
   await preloadAll();
@@ -93,12 +96,10 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
       </PropProvider>
     </StaticRouter>
   );
-  await getDataFromTree(sheets.collect(MainApp));
+  await getDataFromTree(MainApp);
+  renderToString(sheets.collect(MainApp));
 
-  const headStream = renderAppHeadStream({ sources, sheets });
-
-  const TopStreams = [headStream];
-  const TopStream = MultiStream(TopStreams);
+  const TopStream = renderAppHeadStream({ sources, sheets });
 
   TopStream.pipe(
     ctx.res,
@@ -114,10 +115,9 @@ export const uiServer = async (ctx: Context, config: Config): Promise<void> => {
   const htmlEnd = `</div><script type="text/javascript">window.APP_STATE = ${JSON.stringify(appState)}</script>${renderScripts(
     sources
   )}`;
-
   TopStream.on('end', () => {
     ctx.res.write('<div id="app">');
-    ctx.res.write(`${renderPortalsToString(renderToString(MainApp))}`);
+    ctx.res.write(`${renderPortalsToString(renderToString(sheets.collect(MainApp)))}`);
     ctx.res.write(htmlEnd);
 
     ctx.res.end(`</body></html>`);

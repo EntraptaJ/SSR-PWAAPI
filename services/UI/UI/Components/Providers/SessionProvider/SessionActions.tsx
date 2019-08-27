@@ -1,5 +1,5 @@
 // UI/UI/Components/Providers/SessionProvider/SessionActions.tsx
-import React, { FunctionComponent, useMemo, MouseEvent, useState } from 'react';
+import React, { FunctionComponent, MouseEvent, useState } from 'react';
 import { useIsAuthed, useLogout } from 'UI/Components/Providers/SessionProvider';
 import IconButton from '@material-ui/core/IconButton';
 import AccountCircle from '@material-ui/icons/AccountCircle';

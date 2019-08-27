@@ -26,10 +26,8 @@ export const ParentListItem: ParentListItemType = ({ label, children, startOpen 
       <LabelListItem label={label} onClick={toggleOpen} {...props}>
         {open ? <ExpandLess /> : <ExpandMore />}
       </LabelListItem>
-      <Collapse in={open} timeout='auto' unmountOnExit>
-        <BaseList disablePadding style={{ paddingLeft: theme.spacing(4) }}>
-          {children}
-        </BaseList>
+      <Collapse style={{ paddingLeft: '32px' }} in={open} timeout='auto' unmountOnExit>
+        <BaseList style={{ paddingLeft: '32px' }}>{children}</BaseList>
       </Collapse>
     </>
   );

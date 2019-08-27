@@ -1,6 +1,6 @@
-import { Resolver, Query, Mutation, Arg, Authorized, Ctx, ObjectType, Field, ForbiddenError } from 'type-graphql';
+import { Resolver, Query, Mutation, Arg, Ctx, ObjectType, Field } from 'type-graphql';
 import { ApolloError } from 'apollo-server-koa';
-import { UserModel, User, NewUserInput } from '../../Models/User';
+import { UserModel, User, NewUserInput, UserRole, UserRoleEnum } from '../../Models/User';
 import { Context } from '../Context';
 import { MutationResponse } from '../Mutations';
 
@@ -10,14 +10,26 @@ class LoginUserMutationResponse implements MutationResponse {
 
   @Field(type => String)
   public token: Promise<string>;
+
+  @Field(type => [UserRoleEnum])
+  public role: UserRole[];
+}
+
+@ObjectType()
+export class UserCheck {
+  @Field()
+  public isAuthed: boolean;
+
+  @Field(type => [UserRoleEnum])
+  public role?: UserRole[];
 }
 
 @Resolver(of => User)
 export default class AuthResolver {
-  @Query(returns => Boolean)
-  public async isAuthed(@Ctx() { user }: Context): Promise<boolean> {
-    if (!user) return false;
-    else return true;
+  @Query(returns => UserCheck)
+  public async userCheck(@Ctx() { user }: Context): Promise<UserCheck> {
+    if (!user) return { isAuthed: false, role: ['Guest'] };
+    else return { isAuthed: true, role: user.role };
   }
 
   @Query(returns => User)
@@ -37,8 +49,8 @@ export default class AuthResolver {
   public async registerUser(@Arg('user', type => NewUserInput) user: NewUserInput): Promise<User> {
     const userExists = await UserModel.findOne({ username: user.username });
     if (userExists) throw new ApolloError('User already exists', 'USER_EXISTS');
-    const User = await UserModel.create({ ...user });
-    return User;
+    const User = new UserModel({ ...user });
+    return User.save();
   }
 
   @Mutation(type => LoginUserMutationResponse, { description: 'Log User into API' })
@@ -48,6 +60,6 @@ export default class AuthResolver {
   ): Promise<LoginUserMutationResponse> {
     const user = await UserModel.findOne({ username });
     if (!user) throw new ApolloError('User not found', 'INVALID_USER');
-    return { success: true, token: user.generateToken(password) };
+    return { success: true, token: user.generateToken(password), role: user.role };
   }
 }

@@ -8,7 +8,7 @@ import { AppRoute } from 'UI/Components/Router/types';
  */
 export const findRoute = (routes: AppRoute[], path: string): AppRoute | undefined => {
   for (const route of routes) {
-    if (route.to === path) return route;
+    if (route.to === path || path.replace(/.*(\/)$/, '') === route.to) return route;
     else if (route.children) return findRoute(route.children, path);
   }
 };

@@ -6,11 +6,10 @@ import { ServerStyleSheets } from '@material-ui/styles';
 
 const AppCSS = `
 #app {
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
-html, body {
+html, body, #app {
   height: 100%;
   width: 100%;
 }`;
